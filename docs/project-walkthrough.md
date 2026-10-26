@@ -78,7 +78,7 @@ dotnet test InventoryManagement.slnx
 - The migration was applied to the local SQL Server. The `InventoryManagement` database did not exist yet, so it was created. `Products`, `Warehouses`, and `__EFMigrationsHistory` exist, with unique indexes `IX_Products_Sku` and `IX_Warehouses_Code`. No database was dropped or reset.
 - Against the running API and real SQL Server: create (201), duplicate in different case (409), invalid input (400), update (200), deactivate (200), filtered list, get of a missing id (404), and `DELETE` (405) all behaved as described. These checks left one deactivated sample product and one deactivated sample warehouse (id 1 each) in the local database.
 
-**Repository.** Not yet committed.
+**Repository.** Section 3 is commit `4eb14b0` ("feat: add products and warehouses API with first migration"), which was pushed to GitHub at <https://github.com/kylepayne0110/inventory-management-app>.
 
 **What is not done.** Receipt batches, receiving, issuing, adjusting, transfers, movements, inventory views and alerts, and the React frontend. Sections 4 onward are not started.
 
