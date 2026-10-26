@@ -1,0 +1,55 @@
+# Secrets and local environment files
+.env
+.env.*
+!.env.example
+*.pfx
+*.key
+*.pem
+secrets.json
+appsettings.Development.local.json
+appsettings.Local.json
+
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.user
+*.suo
+*.userprefs
+.vs/
+*.log
+
+# Node / frontend
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.eslintcache
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local database files
+*.mdf
+*.ldf
+*.ndf
+*.bak
+*.sqlite
+*.sqlite3
+*.db
+mssql-data/
+sqlserver-data/
+
+# IDE and OS files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.claude/settings.local.json
+.DS_Store
+Thumbs.db
