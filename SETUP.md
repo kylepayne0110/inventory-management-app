@@ -1,6 +1,6 @@
 # Setup
 
-> **PARTIALLY AVAILABLE.** The API and the local database connection are available: you can start SQL Server, run the API, and test it as described below. The product and warehouse tables, their API endpoints, and the first migration (Section 3) are available. Frontend setup is not available yet.
+> **PARTIALLY AVAILABLE.** The API and the local database connection are available: you can start SQL Server, run the API, and test it as described below. The product and warehouse tables, their API endpoints, and the first migration (Section 3) are available, as are receiving stock (Section 4) and issuing and adjusting stock (Section 5), which add two more migrations. Frontend setup is not available yet.
 
 ## Prerequisites (planned)
 

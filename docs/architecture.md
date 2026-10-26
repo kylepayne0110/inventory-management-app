@@ -37,13 +37,13 @@ flowchart LR
 
 - **Product**: something that is stocked.
 - **Warehouse**: a location where stock is held.
-- **Receipt batch** (built): a quantity of a product received into a warehouse on a specific date. Stock is tracked per batch so its age is known. It stores the quantity received (never changes) and the quantity on hand (changed by later issue, adjust, and transfer operations).
-- **Stock movement** (built for receipts): an append-only record of a receive, issue, transfer, or adjustment, with a signed quantity change. Only receives exist so far.
+- **Receipt batch** (built): a quantity of a product received into a warehouse on a specific date. Stock is tracked per batch so its age is known. It stores the quantity received (never changes) and the quantity on hand (changed by issue and adjust operations, and later by transfers).
+- **Stock movement** (built for receive, issue, and adjust): an append-only record of a change to stock, with a signed quantity change and, for adjustments, a reason. Transfers are not built yet.
 
 ## Key rules
 
 - **Transfers will preserve the original receipt date.** Moving stock between warehouses will not make it look newer, so aging reports stay accurate.
-- **No FIFO.** The app will not automatically choose which batch to issue from. Users will select the batch to issue from.
+- **No FIFO.** The app does not automatically choose which batch to issue from. Users select the batch to issue from.
 
 ## Movement recording and history
 

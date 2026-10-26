@@ -39,6 +39,7 @@ public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : 
             e.Property(b => b.QuantityReceived).HasPrecision(18, 3);
             e.Property(b => b.QuantityOnHand).HasPrecision(18, 3);
             e.Property(b => b.Reference).HasMaxLength(100);
+            e.Property(b => b.RowVersion).IsRowVersion();
             e.HasOne(b => b.Product).WithMany().HasForeignKey(b => b.ProductId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(b => b.Warehouse).WithMany().HasForeignKey(b => b.WarehouseId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(b => new { b.ProductId, b.WarehouseId });
@@ -50,6 +51,7 @@ public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : 
             e.Property(m => m.Type).HasConversion<string>().HasMaxLength(20);
             e.Property(m => m.QuantityChange).HasPrecision(18, 3);
             e.Property(m => m.Reference).HasMaxLength(100);
+            e.Property(m => m.Reason).HasMaxLength(200);
             e.HasOne(m => m.Product).WithMany().HasForeignKey(m => m.ProductId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(m => m.Warehouse).WithMany().HasForeignKey(m => m.WarehouseId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(m => m.ReceiptBatch).WithMany().HasForeignKey(m => m.ReceiptBatchId).OnDelete(DeleteBehavior.Restrict);

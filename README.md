@@ -2,7 +2,7 @@
 
 A local portfolio project: an inventory management application for a fictional manufacturing or distribution business.
 
-> **Status:** Sections 0–3 (Foundation, API foundation, Database, and Products and warehouses) are complete. The API can create, list, view, update, and deactivate products and warehouses in a local SQL Server database. Stock, receipts, movements, and the frontend are not started. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
+> **Status:** Sections 0–5 (Foundation, API foundation, Database, Products and warehouses, Receiving stock, and Issuing and adjusting stock) are complete. The API can manage products and warehouses, receive stock into dated batches, and issue or adjust stock from a chosen batch, recording a movement each time. Transfers, movement-history viewing, alerts, and the frontend are not started. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
 
 ## Purpose
 
@@ -12,14 +12,14 @@ Businesses that make or distribute physical goods need to know what they have, w
 
 - Manage **products** and **warehouses** (available now: `/api/products` and `/api/warehouses`; records are deactivated, never deleted).
 - Track inventory by **dated receipt batches** (each batch records when stock arrived).
-- **Receive**, **issue**, **transfer**, and **adjust** stock.
+- **Receive**, **issue**, and **adjust** stock (available now); **transfer** stock (planned).
 - **Record a movement** for every stock change as each operation is built. Viewing the **movement history** will come later, with the inventory views and alerts.
 - Identify **low stock** and **aging stock**.
 
 ### Design rules
 
 - Transfers between warehouses will **preserve the original receipt date** of the stock being moved, so aging stays accurate.
-- Issuing stock will **not** use FIFO (first in, first out). Users will select which batch to issue from; the app will not choose batches automatically.
+- Issuing stock does **not** use FIFO (first in, first out). Users select which batch to issue from; the app does not choose batches automatically.
 
 ## Planned stack
 
@@ -61,7 +61,7 @@ inventory-management-app/
 └── .gitignore
 ```
 
-So far, the documentation and configuration files (Section 0), the solution, API project, and test project (Section 1), `compose.yaml` with `.env.example` (Section 2), and the product and warehouse models, endpoints, and first migration (Section 3) exist. The frontend is planned for a later section. See [SETUP.md](SETUP.md) to start the database and run the API.
+So far, the documentation and configuration files (Section 0), the solution, API project, and test project (Section 1), `compose.yaml` with `.env.example` (Section 2), and the product and warehouse models, endpoints, and first migration (Section 3), receipt batches and receiving (Section 4), and issue and adjust endpoints (Section 5) exist. The frontend is planned for a later section. See [SETUP.md](SETUP.md) to start the database and run the API.
 
 ## Products and warehouses API (Section 3)
 
@@ -74,6 +74,18 @@ So far, the documentation and configuration files (Section 0), the solution, API
 | `POST /api/products/{id}/deactivate` | Mark a product inactive |
 
 Warehouses work the same way under `/api/warehouses`, with `code`, `name`, and optional `location`. There is no delete endpoint for either: deactivating keeps the record so future inventory history stays intact. SKUs and warehouse codes are unique, ignoring upper/lower case. See [docs/project-walkthrough.md](docs/project-walkthrough.md) for details.
+
+## Receiving, issuing, and adjusting stock (Sections 4 and 5)
+
+| Method and path | What it does |
+| --- | --- |
+| `POST /api/receipt-batches` | Receive stock into a warehouse as a new dated batch |
+| `GET /api/receipt-batches` | List batches (filter with `?productId=` and `?warehouseId=`) |
+| `GET /api/receipt-batches/{id}` | Get one batch |
+| `POST /api/stock/issue` | Issue a quantity from a chosen batch (cannot exceed what is on hand) |
+| `POST /api/stock/adjust` | Correct a batch up or down with a required reason |
+
+Every receive, issue, and adjustment records a stock movement. See [docs/project-walkthrough.md](docs/project-walkthrough.md) for the rules.
 
 ## Project status
 

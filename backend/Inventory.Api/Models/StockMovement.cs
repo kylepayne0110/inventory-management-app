@@ -3,6 +3,8 @@ namespace Inventory.Api.Models;
 public enum MovementType
 {
     Receive,
+    Issue,
+    Adjust,
 }
 
 // An append-only record of one change to stock. Movements are never edited or deleted.
@@ -31,6 +33,9 @@ public class StockMovement
     public DateTimeOffset OccurredAt { get; set; }
 
     public string? Reference { get; set; }
+
+    // Why the movement happened. Required for adjustments (for example "cycle count" or "damaged").
+    public string? Reason { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 }

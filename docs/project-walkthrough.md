@@ -13,9 +13,70 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
+## Section 5: Issuing and adjusting stock (complete)
+
+**Status:** Section 5 is complete. Stock can be issued from a batch the user chooses, and a batch's quantity can be corrected with a recorded reason. Every operation records a stock movement. Transfers, movement-history viewing, alerts, and the frontend are not started.
+
+**What we built.**
+
+- `Models/StockMovement.cs`: two new movement types, `Issue` and `Adjust`, and an optional `Reason` field.
+- `Models/ReceiptBatch.cs`: a `RowVersion` field used to detect two people changing the same batch at the same moment.
+- `Contracts/StockOperationContracts.cs` and `Endpoints/StockOperationEndpoints.cs`: the API routes and validation.
+- `Data/Migrations/..._AddStockMovementReasonAndBatchRowVersion`: the third migration. It only adds two columns.
+- `StockOperationEndpointTests.cs`: 19 new tests.
+
+**Endpoints.**
+
+- `POST /api/stock/issue` (body: `receiptBatchId`, `quantity`, optional `occurredAt`, optional `reference`) removes stock from that batch. Returns 200 with the new movement and the quantity left on hand.
+- `POST /api/stock/adjust` (body: `receiptBatchId`, `quantityChange`, `reason`, optional `occurredAt`, optional `reference`) corrects a batch up or down. `quantityChange` is signed.
+
+**Rules.**
+
+- The user names the batch. The API never picks one (no FIFO).
+- Issue quantity must be greater than zero, with at most 3 decimal places, and cannot be more than the batch has on hand (409 otherwise).
+- An adjustment cannot be zero, needs a non-blank reason, and cannot take the batch below zero or above the quantity originally received (409 otherwise). Extra stock found later should be received as a new batch, so it gets its own age.
+- `occurredAt` defaults to now, cannot be in the future, and cannot be before the batch was received.
+- Unknown batch is 400.
+- The batch change and its movement are saved together, so either both happen or neither does.
+- Issuing and adjusting are allowed even if the product or warehouse has been deactivated. Receiving into inactive records is blocked (Section 4), but stock that is already there must always be removable or correctable.
+- Issuing never changes `QuantityReceived` or `ReceivedAt`, so stock age stays accurate.
+
+**Decisions.**
+
+- Adjustments are expressed as a signed change rather than "set the count to N", so the movement records exactly what changed.
+- If two requests change the same batch at once, the second gets 409 ("changed by someone else, try again") instead of silently overwriting the first or overselling. The database already refuses a negative quantity as a further safeguard.
+- The tests use an in-memory database, which does not enforce the row version, so that protection is not covered by automated tests; it relies on SQL Server.
+
+**Plain-language explanations.**
+
+- *Issue*: stock leaves the warehouse (for example, it is sold or used). The batch's on-hand quantity goes down and a ledger line is added.
+- *Adjustment*: a correction, such as a damaged item or a miscount. It needs a reason so the history can be explained.
+- *Row version*: a hidden counter the database changes on each save. If it has changed since the batch was read, the save is refused.
+- *Migration*: this one adds a `Reason` column to `StockMovements` and a `RowVersion` column to `ReceiptBatches`. Existing rows are kept.
+
+**Key commands.**
+
+```bash
+dotnet dotnet-ef migrations add AddStockMovementReasonAndBatchRowVersion --project backend/Inventory.Api --output-dir Data/Migrations
+dotnet dotnet-ef database update --project backend/Inventory.Api
+dotnet build InventoryManagement.slnx
+dotnet test InventoryManagement.slnx
+```
+
+**Verification.**
+
+- `dotnet build` succeeded with 0 warnings and 0 errors.
+- `dotnet test` passed: 65 tests.
+- The migration was applied to the local SQL Server with no drop or reset. The existing batch (40 units) and its movement were kept.
+- Against the running API and real SQL Server: issuing 10 left 30 on hand, issuing 999 returned 409, an adjustment of +10 with a reason restored 40, and an adjustment without a reason returned 400. These checks left two extra movements (an issue and an adjustment) on sample batch 1; its quantity is back to 40.
+
+**What is not done.** Transfers, movement-history viewing, low-stock and aging alerts, and the React frontend. Sections 6 onward are not started.
+
+---
+
 ## Section 4: Receipt batches and receiving stock (complete)
 
-**Status:** Section 4 is complete. Stock can be received into a warehouse as a batch, and every receipt records a stock movement. Issuing, adjusting, transfers, movement-history viewing, and the frontend are not started.
+**Status:** Section 4 is complete. Stock can be received into a warehouse as a batch, and every receipt records a stock movement. Transfers, movement-history viewing, and the frontend are not started.
 
 **What we built.**
 

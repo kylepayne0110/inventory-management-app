@@ -95,6 +95,11 @@ namespace Inventory.Api.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("WarehouseId")
                         .HasColumnType("int");
 
@@ -130,6 +135,10 @@ namespace Inventory.Api.Data.Migrations
                     b.Property<decimal>("QuantityChange")
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("ReceiptBatchId")
                         .HasColumnType("int");

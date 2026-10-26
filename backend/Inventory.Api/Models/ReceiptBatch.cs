@@ -25,4 +25,7 @@ public class ReceiptBatch
     public string? Reference { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    // Changes on every save. If two requests change the same batch at once, the second one fails instead of overwriting the first.
+    public byte[]? RowVersion { get; set; }
 }
