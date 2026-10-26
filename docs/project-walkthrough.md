@@ -13,6 +13,65 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
+## Section 6: Transfers (complete)
+
+**Status:** Section 6 is complete. Stock can be moved from a chosen batch to another warehouse. The original receipt date is kept, and two movements are recorded. Movement-history viewing, alerts, and the frontend are not started.
+
+**What we built.**
+
+- `Models/StockMovement.cs`: two new movement types, `TransferOut` and `TransferIn`, and a nullable `TransferId` that both movements of one transfer share (it is empty for receive, issue, and adjust).
+- `Data/Migrations/..._AddStockMovementTransferId`: the fourth migration. It only adds a nullable column and an index, so existing rows are kept (their `TransferId` stays empty).
+- `Contracts/TransferContracts.cs` and `Endpoints/TransferEndpoints.cs`: the API route and validation.
+- `TransferEndpointTests.cs`: 21 new tests.
+
+**Endpoint.**
+
+- `POST /api/stock/transfer` (body: `sourceReceiptBatchId`, `destinationWarehouseId`, `quantity`, optional `occurredAt`, optional `reference`) returns 200 with the `TransferId`, the `TransferOut` movement, the `TransferIn` movement, and the new destination batch.
+
+**Rules.**
+
+- The user names the source batch. The API never picks one (no FIFO).
+- The stock arrives in a **new batch** in the destination warehouse. It copies the source batch's `ReceivedAt` (and reference), so stock age is unchanged. Its `QuantityReceived` is the amount transferred.
+- Quantity must be greater than zero, with at most 3 decimal places, and cannot be more than the source batch has on hand (409).
+- The destination must exist (400) and differ from the batch's current warehouse (400).
+- The destination warehouse and the product must be active (409), as when receiving. The source warehouse may be inactive, so stock there can always be moved out.
+- `occurredAt` defaults to now, cannot be in the future, and cannot be before the batch was received (400).
+- The source change, the new batch, and both movements are saved together, so all happen or none do. The source batch's row version guards against two people changing it at once (409).
+- Transferred batches can be issued from, adjusted, or transferred again, and always keep the original `ReceivedAt`.
+
+**Decisions.**
+
+- A new destination batch is created for every transfer rather than merging into an existing one, because merging would lose the separate dates.
+- The two movements are linked by a shared `TransferId` (a GUID generated per transfer), so history can always pair them. It is a plain column with an index, not a separate Transfers table.
+- As in Section 5, the in-memory test database does not enforce the row version.
+
+**Plain-language explanations.**
+
+- *Transfer*: moving stock from one warehouse to another. Nothing is bought or sold, so the stock keeps its original arrival date and is not treated as new.
+- *Two movements*: the ledger shows stock leaving one place and arriving in the other, so totals still add up.
+- *Transfer ID*: a unique label stamped on both ledger lines of one transfer, so they can be matched up later.
+- *Migration*: this one adds a `TransferId` column and index to `StockMovements`. Nothing is dropped or reset.
+
+**Key commands.**
+
+```bash
+dotnet dotnet-ef migrations add AddStockMovementTransferId --project backend/Inventory.Api --output-dir Data/Migrations
+dotnet dotnet-ef database update --project backend/Inventory.Api
+dotnet build InventoryManagement.slnx
+dotnet test InventoryManagement.slnx
+```
+
+**Verification.**
+
+- `dotnet build` succeeded with 0 warnings and 0 errors.
+- `dotnet test` passed: 86 tests, including checks that both movements of a transfer share one `TransferId`, that separate transfers get different ids, and that other movements have none.
+- The migration was applied to the local SQL Server with no drop or reset. `__EFMigrationsHistory` lists four migrations; the existing 1 batch and 7 movements were kept, all with an empty `TransferId`.
+- The transfer endpoint itself was tested with the in-memory database only, not against the live API.
+
+**What is not done.** Movement-history viewing, low-stock and aging alerts, and the React frontend. Sections 7 onward are not started.
+
+---
+
 ## Section 5: Issuing and adjusting stock (complete)
 
 **Status:** Section 5 is complete. Stock can be issued from a batch the user chooses, and a batch's quantity can be corrected with a recorded reason. Every operation records a stock movement. Transfers, movement-history viewing, alerts, and the frontend are not started.

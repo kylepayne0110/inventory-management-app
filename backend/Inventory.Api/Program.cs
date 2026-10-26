@@ -60,6 +60,7 @@ app.MapProductEndpoints();
 app.MapWarehouseEndpoints();
 app.MapReceiptEndpoints();
 app.MapStockOperationEndpoints();
+app.MapTransferEndpoints();
 
 app.Run();
 

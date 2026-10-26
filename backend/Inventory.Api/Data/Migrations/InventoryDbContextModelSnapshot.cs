@@ -147,6 +147,9 @@ namespace Inventory.Api.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid?>("TransferId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -160,6 +163,8 @@ namespace Inventory.Api.Data.Migrations
                     b.HasIndex("ProductId");
 
                     b.HasIndex("ReceiptBatchId");
+
+                    b.HasIndex("TransferId");
 
                     b.HasIndex("WarehouseId");
 

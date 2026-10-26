@@ -1,6 +1,6 @@
 # Architecture
 
-> **Planned design, partly built.** Products, warehouses, receipt batches, and receiving stock (with its movement record) are implemented. The rest is still planned and will be updated as it is built.
+> **Planned design, partly built.** Products, warehouses, receipt batches, receiving, issuing, adjusting, and transferring stock (each with its movement records) are implemented. The rest is still planned and will be updated as it is built.
 
 ## Overview
 
@@ -38,11 +38,11 @@ flowchart LR
 - **Product**: something that is stocked.
 - **Warehouse**: a location where stock is held.
 - **Receipt batch** (built): a quantity of a product received into a warehouse on a specific date. Stock is tracked per batch so its age is known. It stores the quantity received (never changes) and the quantity on hand (changed by issue and adjust operations, and later by transfers).
-- **Stock movement** (built for receive, issue, and adjust): an append-only record of a change to stock, with a signed quantity change and, for adjustments, a reason. Transfers are not built yet.
+- **Stock movement** (built for receive, issue, and adjust): an append-only record of a change to stock, with a signed quantity change and, for adjustments, a reason. Transfers record two movements, `TransferOut` and `TransferIn`, which share a `TransferId`.
 
 ## Key rules
 
-- **Transfers will preserve the original receipt date.** Moving stock between warehouses will not make it look newer, so aging reports stay accurate.
+- **Transfers preserve the original receipt date.** Moving stock between warehouses does not make it look newer, so aging reports stay accurate.
 - **No FIFO.** The app does not automatically choose which batch to issue from. Users select the batch to issue from.
 
 ## Movement recording and history

@@ -56,6 +56,7 @@ public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : 
             e.HasOne(m => m.Warehouse).WithMany().HasForeignKey(m => m.WarehouseId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(m => m.ReceiptBatch).WithMany().HasForeignKey(m => m.ReceiptBatchId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(m => m.ReceiptBatchId);
+            e.HasIndex(m => m.TransferId);
         });
     }
 }

@@ -2,7 +2,7 @@
 
 A local portfolio project: an inventory management application for a fictional manufacturing or distribution business.
 
-> **Status:** Sections 0–5 (Foundation, API foundation, Database, Products and warehouses, Receiving stock, and Issuing and adjusting stock) are complete. The API can manage products and warehouses, receive stock into dated batches, and issue or adjust stock from a chosen batch, recording a movement each time. Transfers, movement-history viewing, alerts, and the frontend are not started. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
+> **Status:** Sections 0–6 (Foundation, API foundation, Database, Products and warehouses, Receiving stock, Issuing and adjusting stock, and Transfers) are complete. The API can manage products and warehouses, receive stock into dated batches, and issue or adjust stock from a chosen batch, recording a movement each time. Stock can also be transferred between warehouses, keeping its original receipt date. Movement-history viewing, alerts, and the frontend are not started. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
 
 ## Purpose
 
@@ -12,13 +12,13 @@ Businesses that make or distribute physical goods need to know what they have, w
 
 - Manage **products** and **warehouses** (available now: `/api/products` and `/api/warehouses`; records are deactivated, never deleted).
 - Track inventory by **dated receipt batches** (each batch records when stock arrived).
-- **Receive**, **issue**, and **adjust** stock (available now); **transfer** stock (planned).
+- **Receive**, **issue**, **adjust**, and **transfer** stock (available now).
 - **Record a movement** for every stock change as each operation is built. Viewing the **movement history** will come later, with the inventory views and alerts.
 - Identify **low stock** and **aging stock**.
 
 ### Design rules
 
-- Transfers between warehouses will **preserve the original receipt date** of the stock being moved, so aging stays accurate.
+- Transfers between warehouses **preserve the original receipt date** of the stock being moved, so aging stays accurate.
 - Issuing stock does **not** use FIFO (first in, first out). Users select which batch to issue from; the app does not choose batches automatically.
 
 ## Planned stack
@@ -75,7 +75,7 @@ So far, the documentation and configuration files (Section 0), the solution, API
 
 Warehouses work the same way under `/api/warehouses`, with `code`, `name`, and optional `location`. There is no delete endpoint for either: deactivating keeps the record so future inventory history stays intact. SKUs and warehouse codes are unique, ignoring upper/lower case. See [docs/project-walkthrough.md](docs/project-walkthrough.md) for details.
 
-## Receiving, issuing, and adjusting stock (Sections 4 and 5)
+## Receiving, issuing, adjusting, and transferring stock (Sections 4 to 6)
 
 | Method and path | What it does |
 | --- | --- |
@@ -84,8 +84,9 @@ Warehouses work the same way under `/api/warehouses`, with `code`, `name`, and o
 | `GET /api/receipt-batches/{id}` | Get one batch |
 | `POST /api/stock/issue` | Issue a quantity from a chosen batch (cannot exceed what is on hand) |
 | `POST /api/stock/adjust` | Correct a batch up or down with a required reason |
+| `POST /api/stock/transfer` | Move a quantity from a chosen batch to another warehouse, keeping its original receipt date |
 
-Every receive, issue, and adjustment records a stock movement. See [docs/project-walkthrough.md](docs/project-walkthrough.md) for the rules.
+Every receive, issue, and adjustment records a stock movement; a transfer records two movements that share a `TransferId`. See [docs/project-walkthrough.md](docs/project-walkthrough.md) for the rules.
 
 ## Project status
 
