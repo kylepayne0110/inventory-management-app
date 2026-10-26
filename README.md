@@ -2,26 +2,27 @@
 
 A local portfolio project: an inventory management application for a fictional manufacturing or distribution business.
 
-> **Status:** Sections 0–7 (Foundation, API foundation, Database, Products and warehouses, Receiving stock, Issuing and adjusting stock, Transfers, and Inventory views and alerts) are complete. The API can manage products and warehouses, receive stock into dated batches, and issue or adjust stock from a chosen batch, recording a movement each time. Stock can also be transferred between warehouses, keeping its original receipt date. Movement history, stock levels, and low-stock and aging-stock alerts can be read through the API. The frontend is not started. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
+> **Status:** All sections (0–9) are complete; the app is finished as a local app. A React + TypeScript frontend runs against the .NET API and SQL Server. You can manage products and warehouses, receive stock into dated batches, issue or adjust stock from a chosen batch, transfer stock between warehouses (keeping its original receipt date), and view stock levels, movement history, and low-stock and aging-stock alerts. See [Project status](#project-status), [docs/milestones.md](docs/milestones.md), and [SETUP.md](SETUP.md) to run it.
 
 ## Purpose
 
-Businesses that make or distribute physical goods need to know what they have, where it is, and how long it has been sitting there. This project aims to answer those questions with a small, well-structured application. The app will run entirely on a developer machine, will not be deployed, and will have no external integrations.
+Businesses that make or distribute physical goods need to know what they have, where it is, and how long it has been sitting there. This project aims to answer those questions with a small, well-structured application. The app runs entirely on a developer machine, is not deployed, and has no external integrations.
 
-## Planned features
+## Features
 
-- Manage **products** and **warehouses** (available now: `/api/products` and `/api/warehouses`; records are deactivated, never deleted).
+- Manage **products** and **warehouses** (`/api/products` and `/api/warehouses`; records are deactivated, never deleted).
 - Track inventory by **dated receipt batches** (each batch records when stock arrived).
-- **Receive**, **issue**, **adjust**, and **transfer** stock (available now).
-- **Record a movement** for every stock change as each operation is built. Viewing the **movement history** will come later, with the inventory views and alerts.
+- **Receive**, **issue**, **adjust**, and **transfer** stock.
+- **Record a movement** for every stock change, and view the **movement history**.
 - Identify **low stock** and **aging stock**.
+- A browser UI for all of the above (see [Frontend](#frontend)).
 
 ### Design rules
 
 - Transfers between warehouses **preserve the original receipt date** of the stock being moved, so aging stays accurate.
 - Issuing stock does **not** use FIFO (first in, first out). Users select which batch to issue from; the app does not choose batches automatically.
 
-## Planned stack
+## Stack
 
 | Area | Technology |
 | --- | --- |
@@ -32,20 +33,20 @@ Businesses that make or distribute physical goods need to know what they have, w
 | Tests | xUnit |
 | Source control | Git / GitHub |
 
-The app will run locally only, will not be deployed, and will have no external integrations.
+The app runs locally only, is not deployed, and has no external integrations.
 
 ## Architecture at a high level
 
-A React app in the browser will call a .NET Web API over HTTP. The API will use Entity Framework Core to read and write a SQL Server database running in a Docker container, with its data kept in a named Docker volume. See [docs/architecture.md](docs/architecture.md) for a diagram and details.
+A React app in the browser calls a .NET Web API over HTTP. The API uses Entity Framework Core to read and write a SQL Server database running in a Docker container, with its data kept in a named Docker volume. See [docs/architecture.md](docs/architecture.md) for a diagram and details.
 
-## Planned repository layout
+## Repository layout
 
 ```
 inventory-management-app/
 ├── backend/
 │   └── Inventory.Api/   (Models, Contracts, Endpoints, Data, Data/Migrations)
 ├── frontend/
-│   └── inventory-web/
+│   └── inventory-web/   (Vite + React + TypeScript: src/pages, src/components, api.ts)
 ├── tests/
 │   └── Inventory.Api.Tests/
 ├── docs/
@@ -61,7 +62,7 @@ inventory-management-app/
 └── .gitignore
 ```
 
-So far, the documentation and configuration files (Section 0), the solution, API project, and test project (Section 1), `compose.yaml` with `.env.example` (Section 2), and the product and warehouse models, endpoints, and first migration (Section 3), receipt batches and receiving (Section 4), issue and adjust endpoints (Section 5), transfers (Section 6), and the read-only inventory views and alerts (Section 7) exist. The frontend is planned for a later section. See [SETUP.md](SETUP.md) to start the database and run the API.
+See [SETUP.md](SETUP.md) to start the database, the API, and the frontend.
 
 ## Products and warehouses API (Section 3)
 
@@ -99,13 +100,28 @@ All read-only; no data is changed. The low-stock alert uses each product's `reor
 | `GET /api/inventory/alerts/low-stock` | Active products whose total on hand is at or below their own saved `reorderThreshold`, including products with none; `warehouseId` limits the count to one warehouse |
 | `GET /api/inventory/alerts/aging-stock` | Batches still holding stock that were received at least `days` ago (default 90), oldest first; `productId` and `warehouseId` filters |
 
+## Frontend
+
+`frontend/inventory-web` is a React + TypeScript app (Vite, React Router). With the API running, start it and open <http://localhost:5173>:
+
+| Screen | What you can do |
+| --- | --- |
+| Alerts (home) | See low-stock products (optionally for one warehouse) and aging stock (choose the number of days) |
+| Products, Warehouses | Create, edit, and deactivate; SKU and code cannot change |
+| Receive | Receive stock into a new batch, optionally backdated, with a reference |
+| Batches | Issue, adjust (with a reason), or transfer stock from a batch you choose |
+| Stock levels | Quantity on hand per product and warehouse |
+| Movements | Filterable, paged history of every stock change |
+
+The dev server forwards `/api` to the API on port 5127, so no extra configuration is needed.
+
 ## Project status
 
 See the status banner at the top of this file, and [docs/milestones.md](docs/milestones.md) for progress on each section.
 
 ## Documentation
 
-- [SETUP.md](SETUP.md): setup and run instructions (database, API, and tests are covered; the frontend is not yet available)
+- [SETUP.md](SETUP.md): setup and run instructions (database, API, frontend, and tests)
 - [docs/architecture.md](docs/architecture.md): how the pieces fit together
 - [docs/milestones.md](docs/milestones.md): planned sections and progress
 - [docs/project-walkthrough.md](docs/project-walkthrough.md): build log and plain-language explanations

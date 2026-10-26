@@ -1,6 +1,6 @@
 # Project Walkthrough
 
-This is the build log for the inventory management app. It is updated at the end of each section of the project.
+This is the build log for the inventory management app. It is updated at the end of each section of the project. All sections (0 to 9) are now complete; the newest entries are first.
 
 Each entry will capture:
 
@@ -10,6 +10,75 @@ Each entry will capture:
 - **Plain-language explanations**: short, non-jargon descriptions of the technologies involved, so a nontechnical reader can follow along.
 
 See [milestones.md](milestones.md) for the list of sections and their progress and [architecture.md](architecture.md) for the design.
+
+---
+
+## Section 9: Testing and polish (complete)
+
+**Status:** Section 9 is complete. The whole app was built, tested, and walked through in a real browser against the real API and SQL Server. The documentation now describes the finished app.
+
+**What we built.**
+
+- `StockWorkflowTests.cs`: 2 new tests (113 in total). One follows a product through receive, transfer, issue, and adjust, then checks that stock levels, the five movements, the aging alerts (the transferred batch keeps its age), and the low-stock alert all agree. The other checks that a deactivated product can still have stock issued but cannot receive or transfer stock, and no longer raises low-stock alerts.
+- Final documentation: `README.md`, `SETUP.md` (quick start, frontend steps, troubleshooting), `docs/architecture.md`, and `docs/milestones.md` now describe the finished app.
+
+**Verification.**
+
+- `dotnet build InventoryManagement.slnx`: 0 warnings, 0 errors. `dotnet test InventoryManagement.slnx`: 113 passed.
+- `npm run build` and `npm run lint` in `frontend/inventory-web`: clean.
+- The app was started locally (SQL Server in Docker, `dotnet run`, `npm run dev`) and driven in a headless Chromium browser through the UI: creating a product (a duplicate SKU was refused) and editing its name and threshold; creating two warehouses; receiving 40 units backdated 120 days (a zero quantity was blocked by the form); transferring 10 to the second warehouse (both batches showed the same received date); issuing 999 (refused) then 5; adjusting by -2 with a reason; then checking stock levels (23 and 10), movement history (5 movements, and the type filter), the low-stock alert, the aging alerts (2 batches, and the days filter), and that a deactivated warehouse disappears from the Receive screen. No unexpected browser console errors.
+- The migrations were already applied; no schema change was needed, and nothing was dropped or reset. The existing products, batches, and movements were kept. The browser checks added sample records to the local database (products and warehouses with `UI-` prefixes, and their batches and movements).
+- One test assumption was wrong at first (transfers of a deactivated product were expected to work). The documented rule, shared with receiving, is that the product must be active; the test was corrected, not the API.
+
+**What is not done by design.** Deployment, authentication, and external integrations are out of scope. Row-version conflict handling and the database's unique indexes depend on SQL Server and are not covered by the in-memory tests.
+
+---
+
+## Section 8: React frontend (complete)
+
+**Status:** Section 8 is complete. A React + TypeScript app talks to the existing API and covers every workflow. No backend code or database changes were needed.
+
+**What we built.**
+
+- `frontend/inventory-web/`: a Vite project using React, TypeScript, and React Router.
+- `src/api.ts`: the one place that calls the API, with typed functions for every endpoint and one helper that turns the API's error replies into a readable message. `src/types.ts` describes the JSON.
+- `src/hooks.ts`: `useLoad`, a small helper that loads data, exposes loading and error state, and ignores a slow response that has been overtaken by a newer request.
+- `src/pages/`: Alerts (the home page), Products, Warehouses, Receive, Batches, StockLevels, and Movements. `src/components/ui.tsx` holds small shared pieces (error box, field, badge).
+- `vite.config.ts`: forwards `/api` and `/health` to the API on port 5127.
+
+**Screens and rules they follow.**
+
+- Products and warehouses: create, edit, deactivate (after a confirmation). SKU and code are shown as fixed. Reorder threshold is editable.
+- Receive: only active products and warehouses can be chosen. An optional received date creates a backdated batch (future dates are not offered).
+- Batches: lists batches with filters and hides empty ones by default. Issue, Adjust, and Transfer are done on a batch the user picks; the app never chooses a batch (no FIFO). Adjust needs a reason. Transfer offers only other active warehouses and says the original received date is kept.
+- Stock levels, Movements (filters for product, warehouse, and type, with paging of 25), and Alerts (low stock per warehouse, aging stock with an adjustable number of days).
+- Every API error (for example, issuing more than is on hand) is shown on the screen next to the form.
+
+**Decisions.**
+
+- A development proxy instead of CORS: the browser only ever talks to the Vite server, so the API is unchanged and not opened to other origins.
+- The frontend contains no business rules beyond basic form checks. The API stays the source of truth, so the two cannot disagree.
+- Plain CSS with light and dark colour schemes, and no UI library, to keep the app small.
+- Occurred-at dates for issue, adjust, and transfer are not shown; the API default of "now" is used, which always satisfies its date rules.
+
+**Plain-language explanations.**
+
+- *React*: a library for building web pages out of small reusable pieces.
+- *TypeScript*: JavaScript with types, so mistakes such as a misspelled field are caught while building.
+- *Vite*: the tool that runs the app during development and bundles it for a browser.
+- *Proxy*: the development server passing certain requests on to the API, so the page and the API appear to share one address.
+
+**Key commands.**
+
+```bash
+npm create vite@latest inventory-web -- --template react-ts
+npm install react-router-dom
+npm run build
+npm run lint
+npm run dev
+```
+
+**What is not done.** Testing and polish were finished in Section 9.
 
 ---
 

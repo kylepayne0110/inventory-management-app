@@ -1,8 +1,8 @@
 # Setup
 
-> **PARTIALLY AVAILABLE.** The API and the local database connection are available: you can start SQL Server, run the API, and test it as described below. The product and warehouse tables, their API endpoints, and the first migration (Section 3) are available, as are receiving stock (Section 4) and issuing and adjusting stock (Section 5), which add two more migrations. Transfers (Section 6) add a fourth migration. The inventory views and alerts (Section 7) are read-only; they add a fifth migration, `AddProductReorderThreshold`, which adds each product's reorder threshold. Frontend setup is not available yet.
+> **Complete.** Follow [Quick start](#quick-start) to run the whole app locally: SQL Server in Docker, the .NET API, and the React frontend. The database has five migrations (the last, `AddProductReorderThreshold`, adds each product's reorder threshold); the frontend needs no migration.
 
-## Prerequisites (planned)
+## Prerequisites
 
 - Git
 - .NET 10 SDK
@@ -10,7 +10,7 @@
 - Docker (with Docker Compose) for the local SQL Server container
 - An editor or IDE of your choice
 
-Exact versions will be recorded here once they are confirmed.
+Built and verified with .NET SDK 10.0, Node.js 24 with npm 11, and Docker Compose with the SQL Server 2022 image. Ports used: 1433 (SQL Server, localhost only), 5127 (API), and 5173 (frontend).
 
 ## Git and GitHub basics
 
@@ -89,9 +89,24 @@ The first time, Git needs to know where `main` should go. `-u` (short for `--set
 
 Authentication is handled by GitHub's normal sign-in prompts or your configured credential helper. Never write passwords or access tokens into project files.
 
-## Get the code (to be written)
+## Get the code
 
-Cloning instructions (`git clone https://github.com/kylepayne0110/inventory-management-app`) will be finalized here once the app setup steps below are written.
+```bash
+git clone https://github.com/kylepayne0110/inventory-management-app
+cd inventory-management-app
+```
+
+## Quick start
+
+Once the one-time setup below (steps 1 to 4 under "Start the database") is done, start the app with three commands, each in its own terminal, from the repository root:
+
+```bash
+docker compose up -d                                   # 1. database (wait until `docker compose ps` says healthy)
+dotnet run --project backend/Inventory.Api             # 2. API on http://localhost:5127
+npm --prefix frontend/inventory-web run dev            # 3. frontend on http://localhost:5173
+```
+
+Open <http://localhost:5173>. Run `npm --prefix frontend/inventory-web install` once first on a new checkout. Stop each with Ctrl+C and the database with `docker compose stop` (the data is kept).
 
 ## Start the database
 
@@ -202,9 +217,27 @@ curl -i 'http://localhost:5127/api/inventory/alerts/aging-stock?days=60'
 
 Set a product's low-stock level with `curl -X PUT http://localhost:5127/api/products/1 -H 'content-type: application/json' -d '{"name":"M10 bolt","reorderThreshold":25}'`; the low-stock alert compares each product against its own `reorderThreshold` (default 0). These views only read data. Invalid parameters (for example a negative `days`) return 400.
 
-## Run the frontend (not yet available)
+## Run the frontend
 
-Commands for installing dependencies and starting the React development server.
+The frontend is in `frontend/inventory-web` (React, TypeScript, Vite). Start the database and the API first, then:
+
+```bash
+cd frontend/inventory-web
+npm install          # once; downloads the libraries
+npm run dev          # development server on http://localhost:5173
+```
+
+Open <http://localhost:5173>. The dev server forwards requests for `/api` and `/health` to the API at `http://localhost:5127`. If your API runs elsewhere, set `VITE_API_TARGET` (for example `VITE_API_TARGET=http://localhost:6000 npm run dev`).
+
+Other commands, all run in `frontend/inventory-web`:
+
+```bash
+npm run build        # type-check and build the production bundle into dist/
+npm run lint         # run the linter (oxlint)
+npm run preview      # serve the built bundle on http://localhost:4173 (also forwards /api to the API)
+```
+
+A tour of the screens: create a product and two warehouses; receive stock into one (the Receive screen lets you backdate it); on Batches, transfer part of it to the other warehouse, issue some, and adjust it with a reason; then check Stock levels, Movements, and Alerts.
 
 ## Run the tests
 
@@ -212,8 +245,13 @@ Commands for installing dependencies and starting the React development server.
 dotnet test InventoryManagement.slnx
 ```
 
-This builds the solution and runs the xUnit tests in `tests/Inventory.Api.Tests`. There are 111 tests. Two cover the health endpoints (`/health` returns 200 `Healthy`; `/health/db` returns 503 `Unhealthy` with no password or host when SQL Server is unreachable). The rest cover the product and warehouse endpoints: creating, validation errors, duplicate SKU/code, get, update, deactivate, and the absence of delete. Others cover receiving, issuing, adjusting, transferring, and the read-only inventory views and alerts. The endpoint tests use an in-memory stand-in for the database, so none of the tests need SQL Server or a running API. The database-level unique indexes come from the migration and are not exercised by these tests.
+This builds the solution and runs the xUnit tests in `tests/Inventory.Api.Tests`. There are 113 tests. Two cover the health endpoints (`/health` returns 200 `Healthy`; `/health/db` returns 503 `Unhealthy` with no password or host when SQL Server is unreachable). The rest cover the product and warehouse endpoints: creating, validation errors, duplicate SKU/code, get, update, deactivate, and the absence of delete. Others cover receiving, issuing, adjusting, transferring, and the read-only inventory views and alerts, plus `StockWorkflowTests`, which follow stock from receipt through transfer, issue, and adjustment and check that stock levels, movements, and alerts agree. The endpoint tests use an in-memory stand-in for the database, so none of the tests need SQL Server or a running API. The database-level unique indexes come from the migration and are not exercised by these tests.
 
-## Troubleshooting (to be written)
+## Troubleshooting
 
-Common problems and fixes will be collected here as they come up.
+- **The page shows "Cannot reach the API".** Start the API (`dotnet run --project backend/Inventory.Api`) and check <http://localhost:5127/health>.
+- **`/health/db` returns 503, or the API fails on start.** Check that the container is healthy (`docker compose ps`) and that the User Secrets connection string exists and uses `Database=InventoryManagement` (see step 3 above).
+- **API errors mention missing tables or columns.** Apply the migrations: `dotnet dotnet-ef database update --project backend/Inventory.Api`.
+- **`npm run dev` says port 5173 is in use.** Another dev server is running; stop it (the port is fixed so the API URL stays predictable).
+- **Compose refuses to start.** `.env` is missing or `MSSQL_SA_PASSWORD` is unset; see step 1 above.
+- **Start over with an empty database.** `docker compose down -v` deletes the data volume (destructive), then repeat steps 2 to 4.
