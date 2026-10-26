@@ -2,7 +2,7 @@
 
 A local portfolio project: an inventory management application for a fictional manufacturing or distribution business.
 
-> **Status:** Section 0, Foundation, is in progress; no application features are implemented. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
+> **Status:** Section 0, Foundation, is complete. The documentation and repository foundation are in place, but no application features are implemented. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
 
 ## Purpose
 
@@ -60,7 +60,7 @@ inventory-management-app/
 └── .gitignore
 ```
 
-Only the documentation and configuration files exist so far. The backend, frontend, test project, solution, and Docker configuration are planned for later sections.
+Only the documentation and configuration files exist so far (the Section 0 foundation). The backend, frontend, test project, solution, and Docker configuration are planned for later sections.
 
 ## Project status
 
