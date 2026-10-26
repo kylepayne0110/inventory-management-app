@@ -2,7 +2,7 @@
 
 This file tracks the planned sections of the build and their progress.
 
-**Status:** Section 0, Foundation, is complete. Section 1, API foundation, is complete. No inventory features or database are implemented, and Section 2 and all later sections are not started.
+**Status:** Section 0, Foundation, is complete. Section 1, API foundation, is complete. Section 2, Database, is in progress. No inventory features are implemented, and Sections 3 onward are not started.
 
 Status key: ⏳ in progress · ⬜ not started · ✅ done
 
@@ -12,8 +12,8 @@ The list below is the current plan and may be refined as the project proceeds.
 | --- | --- | --- |
 | 0 | **Foundation**: README, setup outline, architecture and walkthrough docs, `.gitignore`, `.editorconfig` | ✅ Done |
 | 1 | **API foundation**: .NET solution (`InventoryManagement.slnx`), minimal API with a health endpoint and OpenAPI/Swagger docs, xUnit test project | ✅ Done |
-| 2 | **Database**: SQL Server in Docker via `compose.yaml` with a named data volume, EF Core setup, first migration | ⬜ Not started |
-| 3 | **Products and warehouses**: data model and API endpoints | ⬜ Not started |
+| 2 | **Database**: SQL Server in Docker via `compose.yaml` with a named data volume, EF Core setup (`InventoryDbContext`, `/health/db`); no migration yet | ⏳ In progress |
+| 3 | **Products and warehouses**: data model and API endpoints, including the first EF Core migration (created here, when real tables exist) | ⬜ Not started |
 | 4 | **Receipt batches and receiving stock**, recording a movement for each receipt | ⬜ Not started |
 | 5 | **Issuing and adjusting stock**: users select the batch to issue from (no automatic FIFO); each operation records a movement | ⬜ Not started |
 | 6 | **Transfers**, preserving original receipt dates and recording movements | ⬜ Not started |

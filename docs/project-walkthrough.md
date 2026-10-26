@@ -13,6 +13,43 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
+## Section 2: Database (in progress)
+
+**Status:** Section 2 is in progress. SQL Server runs locally in Docker and the API can connect to it. There are no tables, migrations, or inventory features yet.
+
+**What we built.**
+
+- `compose.yaml`: runs the official SQL Server 2022 Linux image with port 1433 published on `127.0.0.1` only, a named volume `sqlserver-data` mounted at `/var/opt/mssql`, and a health check.
+- `.env.example`: a template with a fake placeholder password. The real `.env` is ignored by Git.
+- `Data/InventoryDbContext.cs`: an empty EF Core `DbContext`. Tables are added in Section 3.
+- `Program.cs`: registers the context and adds `GET /health/db`. `GET /health` is unchanged.
+- `DatabaseHealthEndpointTests.cs`: checks that `/health/db` returns 503 with no password or host in the body when SQL Server is unreachable.
+
+**How the API connects.** The API reads the connection string `ConnectionStrings:InventoryDb` from configuration. In local development it comes from .NET User Secrets; it could also come from the environment variable `ConnectionStrings__InventoryDb`. It is never in `appsettings*.json`. The connection uses the `sa` login, `localhost,1433`, and `TrustServerCertificate=True` (the container's certificate is self-signed, which is acceptable for local-only use).
+
+**Decisions.**
+
+- `MSSQL_SA_PASSWORD` is used, not the deprecated `SA_PASSWORD`. Compose refuses to start if it is unset.
+- Port 1433 is bound to `127.0.0.1` so other machines on the network cannot reach the database.
+- `/health/db` returns only `Healthy` (200) or `Unhealthy` (503) and swallows exception details so no credentials or server names leak. It gives up after 5 seconds.
+- The connection string currently targets the built-in `master` database, because the application database, `InventoryManagement`, does not exist yet. The order in Section 3 is: first change the User Secrets connection string to `Database=InventoryManagement`, then run the first EF Core migration, which creates the missing database and applies the schema.
+- **No empty migration was created.** A migration with no tables records nothing useful. The first migration is created in Section 3, when the first real tables are introduced. The milestone plan was updated to say so.
+- `System.Security.Cryptography.Pkcs` is pinned to 10.0.14 because the version pulled in by SQL Server's client library (9.0.11) triggered known-vulnerability build warnings.
+
+**Plain-language explanations.**
+
+- *Docker Compose* describes, in one file, how to run containers so one command (`docker compose up -d`) starts them the same way every time.
+- *Named volume*: a storage area managed by Docker that outlives the container. Deleting or recreating the container keeps the data; `docker compose down -v` deletes it.
+- *EF Core* translates between C# objects and database tables so the API does not hand-write most SQL.
+- *DbContext*: the C# object that represents one conversation with the database. It will list the tables once they exist.
+- *User Secrets*: a per-user store outside the repository (in your home folder) for development secrets such as passwords, so they are never committed.
+
+**Verification.** `docker compose config` validated; the container became healthy; `dotnet build` succeeded with no warnings; `dotnet test` passed (2 tests); with the API running, `/health` and `/health/db` both returned 200 `{"status":"Healthy"}`.
+
+**What is not done.** Products, warehouses, inventory entities, migrations, and the frontend. Sections 3 onward are not started.
+
+---
+
 ## Section 1: API foundation (complete)
 
 **Status:** Section 1, API foundation, is complete. Only the API foundation is built; there are no inventory features, database, frontend, or Docker setup yet.

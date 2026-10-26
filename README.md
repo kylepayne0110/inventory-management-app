@@ -2,7 +2,7 @@
 
 A local portfolio project: an inventory management application for a fictional manufacturing or distribution business.
 
-> **Status:** Section 0, Foundation, and Section 1, API foundation, are complete. The API health endpoint and OpenAPI/Swagger documentation are working, backed by one xUnit test. Inventory features and the database are not implemented yet. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
+> **Status:** Section 0, Foundation, and Section 1, API foundation, are complete. Section 2, Database, is in progress: SQL Server runs locally in Docker, and the API connects to it through EF Core with a `/health/db` check. There are no tables, migrations, or inventory features yet. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
 
 ## Purpose
 
@@ -53,6 +53,7 @@ inventory-management-app/
 │   ├── milestones.md
 │   └── project-walkthrough.md
 ├── compose.yaml
+├── .env.example
 ├── InventoryManagement.slnx
 ├── README.md
 ├── SETUP.md
@@ -60,7 +61,7 @@ inventory-management-app/
 └── .gitignore
 ```
 
-So far, the documentation and configuration files (Section 0) and the solution, API project, and test project (Section 1) exist. The frontend and Docker configuration (`compose.yaml`) are planned for later sections. See [SETUP.md](SETUP.md) to run the API.
+So far, the documentation and configuration files (Section 0), the solution, API project, and test project (Section 1), and `compose.yaml` with `.env.example` (Section 2, in progress) exist. The frontend is planned for a later section. See [SETUP.md](SETUP.md) to start the database and run the API.
 
 ## Project status
 
@@ -68,7 +69,7 @@ See the status banner at the top of this file, and [docs/milestones.md](docs/mil
 
 ## Documentation
 
-- [SETUP.md](SETUP.md): setup and run instructions (the API and tests are covered; database and frontend are not yet available)
+- [SETUP.md](SETUP.md): setup and run instructions (database, API, and tests are covered; the frontend is not yet available)
 - [docs/architecture.md](docs/architecture.md): how the pieces fit together
 - [docs/milestones.md](docs/milestones.md): planned sections and progress
 - [docs/project-walkthrough.md](docs/project-walkthrough.md): build log and plain-language explanations

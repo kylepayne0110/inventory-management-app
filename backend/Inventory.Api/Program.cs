@@ -1,7 +1,15 @@
+using Inventory.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Generates the OpenAPI document that describes this API.
 builder.Services.AddOpenApi();
+
+// The connection string is read from configuration (User Secrets or environment variables), never from appsettings files.
+// Key: ConnectionStrings:InventoryDb. Environment variable form: ConnectionStrings__InventoryDb.
+builder.Services.AddDbContext<InventoryDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("InventoryDb")));
 
 var app = builder.Build();
 
@@ -17,6 +25,32 @@ if (app.Environment.IsDevelopment())
 // A simple endpoint to confirm the API is running.
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }))
     .WithName("GetHealth");
+
+// Reports whether SQL Server is reachable. Failure details are deliberately not returned,
+// because they can contain server names or credentials.
+app.MapGet("/health/db", async (IServiceProvider services, CancellationToken cancellationToken) =>
+{
+    try
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(5));
+
+        // Resolved inside the try so a missing connection string reports Unhealthy instead of throwing.
+        await using var scope = services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+
+        if (await db.Database.CanConnectAsync(timeout.Token))
+        {
+            return Results.Ok(new { status = "Healthy" });
+        }
+    }
+    catch (Exception)
+    {
+        // Intentionally swallowed: the response must not expose exception details.
+    }
+
+    return Results.Json(new { status = "Unhealthy" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+}).WithName("GetDatabaseHealth");
 
 app.Run();
 
