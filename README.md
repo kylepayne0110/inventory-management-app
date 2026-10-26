@@ -2,7 +2,7 @@
 
 A local portfolio project: an inventory management application for a fictional manufacturing or distribution business.
 
-> **Status:** Section 0, Foundation, is complete, and Section 1, API foundation, is in progress. Only the API foundation is implemented so far: a runnable .NET 10 Web API with a health endpoint, OpenAPI/Swagger documentation, and one xUnit test. No inventory features exist yet. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
+> **Status:** Section 0, Foundation, and Section 1, API foundation, are complete. The API health endpoint and OpenAPI/Swagger documentation are working, backed by one xUnit test. Inventory features and the database are not implemented yet. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
 
 ## Purpose
 

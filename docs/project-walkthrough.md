@@ -13,9 +13,9 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
-## Section 1: API foundation (in progress)
+## Section 1: API foundation (complete)
 
-**Status:** In progress, awaiting review. Only the API foundation is built; there are no inventory features, database, frontend, or Docker setup yet.
+**Status:** Section 1, API foundation, is complete. Only the API foundation is built; there are no inventory features, database, frontend, or Docker setup yet.
 
 **What we built.**
 
@@ -48,6 +48,14 @@ dotnet run --project backend/Inventory.Api
 ```
 
 **Decisions.** .NET 10 ships its own OpenAPI generator but no Swagger UI, so a small Swashbuckle package supplies the UI page only. The template's sample weather endpoint was removed. HTTPS was left off because the app runs locally only.
+
+**Verification.**
+
+- `dotnet build InventoryManagement.slnx` succeeded.
+- `dotnet test InventoryManagement.slnx` passed: the one xUnit test, which checks that `/health` returns 200 OK with a `Healthy` status.
+- Manual HTTP checks against the running API confirmed that `/health`, the OpenAPI document at `/openapi/v1.json`, and Swagger UI at `/swagger` respond.
+
+**Repository.** Section 1 is commit `60f0b79` ("feat: add .NET API foundation"), which was pushed to GitHub at <https://github.com/kylepayne0110/inventory-management-app>.
 
 **What is not done.** Inventory entities, products, warehouses, EF Core, SQL Server, Docker, React, authentication, and integrations belong to later sections.
 
