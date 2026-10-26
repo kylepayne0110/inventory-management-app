@@ -1,10 +1,14 @@
 using Inventory.Api.Data;
+using Inventory.Api.Endpoints;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Generates the OpenAPI document that describes this API.
 builder.Services.AddOpenApi();
+
+// Checks incoming requests against the validation attributes (Required, StringLength, ...) and answers 400 when they fail.
+builder.Services.AddValidation();
 
 // The connection string is read from configuration (User Secrets or environment variables), never from appsettings files.
 // Key: ConnectionStrings:InventoryDb. Environment variable form: ConnectionStrings__InventoryDb.
@@ -51,6 +55,9 @@ app.MapGet("/health/db", async (IServiceProvider services, CancellationToken can
 
     return Results.Json(new { status = "Unhealthy" }, statusCode: StatusCodes.Status503ServiceUnavailable);
 }).WithName("GetDatabaseHealth");
+
+app.MapProductEndpoints();
+app.MapWarehouseEndpoints();
 
 app.Run();
 

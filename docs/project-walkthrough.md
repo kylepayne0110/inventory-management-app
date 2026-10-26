@@ -13,6 +13,77 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
+## Section 3: Products and warehouses (complete)
+
+**Status:** Section 3, Products and warehouses, is complete. Products and warehouses can be created, listed, viewed, updated, and deactivated. Receipt batches, stock quantities, movements, and the frontend are not started.
+
+**What we built.**
+
+- `Models/Product.cs` and `Models/Warehouse.cs`: the two models, plain C# classes that become database tables. A product has an id, SKU, name, optional description, unit of measure (default `each`), an active flag, and created/updated timestamps. A warehouse has an id, code, name, optional location, an active flag, and timestamps.
+- `Data/InventoryDbContext.cs`: now lists the `Products` and `Warehouses` tables and sets column sizes, required fields, and the unique indexes on `Sku` and `Code`.
+- `Contracts/`: the shapes of the JSON the API accepts and returns, including the validation rules.
+- `Endpoints/ProductEndpoints.cs` and `Endpoints/WarehouseEndpoints.cs`: the API routes.
+- `Data/Migrations/`: the first EF Core migration, `InitialCreate`.
+- `ProductEndpointTests.cs`, `WarehouseEndpointTests.cs`, `InventoryApiFactory.cs`: 30 new tests.
+
+**Endpoints** (warehouses mirror products under `/api/warehouses`):
+
+- `POST /api/products` creates one and returns 201.
+- `GET /api/products` lists them, ordered by SKU; `?isActive=true|false` filters.
+- `GET /api/products/{id}` returns one, or 404.
+- `PUT /api/products/{id}` changes name, description, and unit of measure.
+- `POST /api/products/{id}/deactivate` marks it inactive. Repeating it is harmless.
+- There is no delete endpoint; `DELETE` returns 405.
+
+**Validation.** Invalid requests get a 400 response that lists what is wrong.
+
+- SKU (max 50) and warehouse code (max 20) are required and may contain only letters, digits, `.`, `_`, `-`, starting with a letter or digit.
+- Name is required (max 200) and cannot be blank. Description (max 1000), unit of measure (max 20), and location (max 500) are optional.
+- SKUs and codes are stored in upper case, so `abc-1` and `ABC-1` are the same. A duplicate gets 409 Conflict. This is checked in the API, and the database's unique index is a second safeguard if two requests race.
+
+**Decisions.**
+
+- **Deactivate, never delete.** Later sections will record stock and movements that point at products and warehouses. Keeping the rows means that history always makes sense. Inactive records still appear in the list unless you filter; later sections will decide how inactive records are treated when receiving or moving stock.
+- **SKU and code cannot be edited.** They identify the record in the real world and in future history. A wrong one should be deactivated and re-created.
+- **Whitespace in a SKU or code is rejected**, not trimmed. Names are trimmed.
+- **Timestamps are UTC** (`datetimeoffset`).
+- **Tests use an in-memory database**, so they are fast and need no SQL Server. The trade-off is that they do not exercise the real unique indexes or SQL Server behavior; those were checked manually (below).
+- `Microsoft.EntityFrameworkCore.Design` and a local `dotnet-ef` tool (pinned in `dotnet-tools.json`) were added to create and apply migrations.
+
+**Plain-language explanations.**
+
+- *Model*: a C# description of one kind of record. EF Core turns each model into a table and each property into a column.
+- *Validation*: checking input before using it, so bad data never reaches the database.
+- *Endpoint*: a URL plus an HTTP verb (GET reads, POST creates or acts, PUT replaces fields) that the API responds to.
+- *Unique index*: a database rule that refuses two rows with the same value, here the same SKU or code.
+- *Migration*: a versioned script that builds or changes the database structure. `InitialCreate` creates the `Products` and `Warehouses` tables and the two unique indexes. EF records applied migrations in `__EFMigrationsHistory`, so each runs once. It only adds things; it does not drop or reset anything.
+
+**Key commands.**
+
+```bash
+dotnet add backend/Inventory.Api package Microsoft.EntityFrameworkCore.Design --version 10.0.14
+dotnet add tests/Inventory.Api.Tests package Microsoft.EntityFrameworkCore.InMemory --version 10.0.14
+dotnet new tool-manifest
+dotnet tool install dotnet-ef --version 10.0.14
+dotnet dotnet-ef migrations add InitialCreate --project backend/Inventory.Api --output-dir Data/Migrations
+dotnet dotnet-ef database update --project backend/Inventory.Api
+dotnet build InventoryManagement.slnx
+dotnet test InventoryManagement.slnx
+```
+
+**Verification.**
+
+- `dotnet build` succeeded with 0 warnings and 0 errors.
+- `dotnet test` passed: 32 tests.
+- The migration was applied to the local SQL Server. The `InventoryManagement` database did not exist yet, so it was created. `Products`, `Warehouses`, and `__EFMigrationsHistory` exist, with unique indexes `IX_Products_Sku` and `IX_Warehouses_Code`. No database was dropped or reset.
+- Against the running API and real SQL Server: create (201), duplicate in different case (409), invalid input (400), update (200), deactivate (200), filtered list, get of a missing id (404), and `DELETE` (405) all behaved as described. These checks left one deactivated sample product and one deactivated sample warehouse (id 1 each) in the local database.
+
+**Repository.** Not yet committed.
+
+**What is not done.** Receipt batches, receiving, issuing, adjusting, transfers, movements, inventory views and alerts, and the React frontend. Sections 4 onward are not started.
+
+---
+
 ## Section 2: Database (complete)
 
 **Status:** Section 2, Database, is complete. SQL Server runs locally in Docker and the API can connect to it. There are no tables, migrations, or inventory features yet.
