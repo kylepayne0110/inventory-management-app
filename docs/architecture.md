@@ -1,6 +1,6 @@
 # Architecture
 
-> **Planned design.** None of this is implemented yet. This document describes the intended architecture and will be updated as it is built.
+> **Planned design, partly built.** Products, warehouses, receipt batches, and receiving stock (with its movement record) are implemented. The rest is still planned and will be updated as it is built.
 
 ## Overview
 
@@ -37,8 +37,8 @@ flowchart LR
 
 - **Product**: something that is stocked.
 - **Warehouse**: a location where stock is held.
-- **Receipt batch**: a quantity of a product received into a warehouse on a specific date. Stock is tracked per batch so its age is known.
-- **Stock movement**: a record of a receive, issue, transfer, or adjustment.
+- **Receipt batch** (built): a quantity of a product received into a warehouse on a specific date. Stock is tracked per batch so its age is known. It stores the quantity received (never changes) and the quantity on hand (changed by later issue, adjust, and transfer operations).
+- **Stock movement** (built for receipts): an append-only record of a receive, issue, transfer, or adjustment, with a signed quantity change. Only receives exist so far.
 
 ## Key rules
 

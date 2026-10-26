@@ -13,6 +13,68 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
+## Section 4: Receipt batches and receiving stock (complete)
+
+**Status:** Section 4 is complete. Stock can be received into a warehouse as a batch, and every receipt records a stock movement. Issuing, adjusting, transfers, movement-history viewing, and the frontend are not started.
+
+**What we built.**
+
+- `Models/ReceiptBatch.cs`: one quantity of one product received into one warehouse on one date, with quantity received, quantity on hand, an optional reference (such as a purchase order number), and timestamps.
+- `Models/StockMovement.cs`: an append-only history record with a type (only `Receive` for now), product, warehouse, batch, a signed quantity change, and when it happened.
+- `Contracts/ReceiptContracts.cs` and `Endpoints/ReceiptEndpoints.cs`: the API routes and validation.
+- `Data/InventoryDbContext.cs`: the two new tables, quantity precision, foreign keys, and a database check that quantity on hand is never negative or above the quantity received.
+- `Data/Migrations/..._AddReceiptBatchesAndStockMovements`: the second migration.
+- `ReceiptEndpointTests.cs`: 14 new tests.
+
+**Endpoints.**
+
+- `POST /api/receipt-batches` receives stock (body: `productId`, `warehouseId`, `quantity`, optional `receivedAt`, optional `reference`) and returns 201.
+- `GET /api/receipt-batches` lists batches, newest first; `?productId=` and `?warehouseId=` filter.
+- `GET /api/receipt-batches/{id}` returns one, or 404.
+- There is no edit or delete; `PUT` and `DELETE` return 405.
+
+**Rules.**
+
+- Quantity must be greater than zero, with at most 3 decimal places.
+- `receivedAt` defaults to now. It may be in the past (to record an earlier delivery) but not in the future.
+- The product and warehouse must exist (400 otherwise) and be active (409 otherwise). This settles the question left open in Section 3: inactive records keep their history but cannot receive new stock.
+- Each receipt creates its batch and its `Receive` movement in a single database save, so either both exist or neither does.
+- Each receipt always creates a new batch, even for the same product and warehouse, because batch age matters.
+
+**Decisions.**
+
+- There is no endpoint to view movements yet; that is Section 7. Tests read them straight from the database.
+- Quantities use `decimal(18,3)` because units of measure may be fractional.
+- Deleting products, warehouses, or batches that have history is blocked by the database (restricted foreign keys), matching the "never delete" rule.
+- The 5-minute grace on future dates allows for small clock differences.
+
+**Plain-language explanations.**
+
+- *Receipt batch*: a "lot" of stock that arrived together. Keeping batches separate lets the app know how old each piece of stock is.
+- *Stock movement*: a ledger line saying "this much stock came in (or later, went out) here". Lines are only added, never changed.
+- *Transaction*: a group of database changes that succeed or fail together.
+- *Migration*: this one only adds two new tables. It does not touch the existing `Products` and `Warehouses` data.
+
+**Key commands.**
+
+```bash
+dotnet dotnet-ef migrations add AddReceiptBatchesAndStockMovements --project backend/Inventory.Api --output-dir Data/Migrations
+dotnet dotnet-ef database update --project backend/Inventory.Api
+dotnet build InventoryManagement.slnx
+dotnet test InventoryManagement.slnx
+```
+
+**Verification.**
+
+- `dotnet build` succeeded with 0 warnings and 0 errors.
+- `dotnet test` passed: 46 tests.
+- The migration was applied to the local SQL Server; the existing database was kept (no drop or reset). `__EFMigrationsHistory` lists `InitialCreate` and the new migration.
+- Against the running API and real SQL Server: a receipt returned 201, a zero quantity 400, an inactive product 409, and the list returned the batch. The database then held 1 batch and 1 movement. These checks left sample product 2 (`S4-TEST`), sample warehouse 2 (`S4-WH`), and one batch of 40 units in the local database.
+
+**What is not done.** Issuing and adjusting stock, transfers, movement-history viewing, low-stock and aging alerts, and the React frontend. Sections 5 onward are not started.
+
+---
+
 ## Section 3: Products and warehouses (complete)
 
 **Status:** Section 3, Products and warehouses, is complete. Products and warehouses can be created, listed, viewed, updated, and deactivated. Receipt batches, stock quantities, movements, and the frontend are not started.

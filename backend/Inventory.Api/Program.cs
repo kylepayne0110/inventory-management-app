@@ -58,6 +58,7 @@ app.MapGet("/health/db", async (IServiceProvider services, CancellationToken can
 
 app.MapProductEndpoints();
 app.MapWarehouseEndpoints();
+app.MapReceiptEndpoints();
 
 app.Run();
 
