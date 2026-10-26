@@ -13,9 +13,9 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
-## Section 2: Database (in progress)
+## Section 2: Database (complete)
 
-**Status:** Section 2 is in progress. SQL Server runs locally in Docker and the API can connect to it. There are no tables, migrations, or inventory features yet.
+**Status:** Section 2, Database, is complete. SQL Server runs locally in Docker and the API can connect to it. There are no tables, migrations, or inventory features yet.
 
 **What we built.**
 
@@ -32,9 +32,9 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 - `MSSQL_SA_PASSWORD` is used, not the deprecated `SA_PASSWORD`. Compose refuses to start if it is unset.
 - Port 1433 is bound to `127.0.0.1` so other machines on the network cannot reach the database.
 - `/health/db` returns only `Healthy` (200) or `Unhealthy` (503) and swallows exception details so no credentials or server names leak. It gives up after 5 seconds.
-- The connection string currently targets the built-in `master` database, because the application database, `InventoryManagement`, does not exist yet. The order in Section 3 is: first change the User Secrets connection string to `Database=InventoryManagement`, then run the first EF Core migration, which creates the missing database and applies the schema.
+- **User Secrets currently targets `master`.** .NET User Secrets holds a connection string with `Database=master`, the built-in system database, because the application database, `InventoryManagement`, does not exist yet and `master` always exists, so `/health/db` can confirm SQL Server is reachable. In Section 3, before applying the first migration, switch the connection string to `Database=InventoryManagement`; the first EF Core migration then creates the database and applies the schema.
 - **No empty migration was created.** A migration with no tables records nothing useful. The first migration is created in Section 3, when the first real tables are introduced. The milestone plan was updated to say so.
-- `System.Security.Cryptography.Pkcs` is pinned to 10.0.14 because the version pulled in by SQL Server's client library (9.0.11) triggered known-vulnerability build warnings.
+- `System.Security.Cryptography.Pkcs` is temporarily pinned to 10.0.14 to resolve a package security advisory; the version pulled in by SQL Server's client library (9.0.11) triggered known-vulnerability build warnings.
 
 **Plain-language explanations.**
 
@@ -44,7 +44,15 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 - *DbContext*: the C# object that represents one conversation with the database. It will list the tables once they exist.
 - *User Secrets*: a per-user store outside the repository (in your home folder) for development secrets such as passwords, so they are never committed.
 
-**Verification.** `docker compose config` validated; the container became healthy; `dotnet build` succeeded with no warnings; `dotnet test` passed (2 tests); with the API running, `/health` and `/health/db` both returned 200 `{"status":"Healthy"}`.
+**Verification.**
+
+- Docker Compose configuration passed (`docker compose config`).
+- The SQL Server container became healthy.
+- `dotnet build` succeeded with 0 warnings and 0 errors.
+- `dotnet test` passed: 2 xUnit tests.
+- With SQL Server reachable, both `/health` and `/health/db` returned HTTP 200.
+
+**Repository.** Section 2 is commit `01c2cc5` ("feat: connect API to local SQL Server"), which was pushed to GitHub at <https://github.com/kylepayne0110/inventory-management-app>.
 
 **What is not done.** Products, warehouses, inventory entities, migrations, and the frontend. Sections 3 onward are not started.
 

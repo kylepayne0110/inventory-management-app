@@ -1,6 +1,6 @@
 # Setup
 
-> **PARTIALLY AVAILABLE.** The API (Section 1) and the local database connection (Section 2, in progress) exist. You can start SQL Server, run the API, and test it as described below. The frontend steps are not yet available.
+> **PARTIALLY AVAILABLE.** The API and the local database connection are available: you can start SQL Server, run the API, and test it as described below. The product and warehouse schema and the first migration come in Section 3. Frontend setup is not available yet.
 
 ## Prerequisites (planned)
 

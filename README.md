@@ -2,7 +2,7 @@
 
 A local portfolio project: an inventory management application for a fictional manufacturing or distribution business.
 
-> **Status:** Section 0, Foundation, and Section 1, API foundation, are complete. Section 2, Database, is in progress: SQL Server runs locally in Docker, and the API connects to it through EF Core with a `/health/db` check. There are no tables, migrations, or inventory features yet. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
+> **Status:** Sections 0–2 (Foundation, API foundation, and Database) are complete. The API can connect to a local SQL Server running in Docker through EF Core, verified by a `/health/db` check. Inventory data and features are still not implemented: there are no tables, migrations, or inventory endpoints yet. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
 
 ## Purpose
 
@@ -61,7 +61,7 @@ inventory-management-app/
 └── .gitignore
 ```
 
-So far, the documentation and configuration files (Section 0), the solution, API project, and test project (Section 1), and `compose.yaml` with `.env.example` (Section 2, in progress) exist. The frontend is planned for a later section. See [SETUP.md](SETUP.md) to start the database and run the API.
+So far, the documentation and configuration files (Section 0), the solution, API project, and test project (Section 1), and `compose.yaml` with `.env.example` (Section 2) exist. The frontend is planned for a later section. See [SETUP.md](SETUP.md) to start the database and run the API.
 
 ## Project status
 
