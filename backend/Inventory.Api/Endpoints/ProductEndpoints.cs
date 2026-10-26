@@ -14,6 +14,11 @@ public static class ProductEndpoints
 
         group.MapPost("/", async (CreateProductRequest request, InventoryDbContext db, CancellationToken ct) =>
         {
+            if (ThresholdError(request.ReorderThreshold) is { } thresholdError)
+            {
+                return thresholdError;
+            }
+
             var sku = request.Sku!.Trim().ToUpperInvariant();
 
             if (await db.Products.AnyAsync(p => p.Sku == sku, ct))
@@ -28,6 +33,7 @@ public static class ProductEndpoints
                 Name = request.Name!.Trim(),
                 Description = Clean(request.Description),
                 UnitOfMeasure = Clean(request.UnitOfMeasure) ?? "each",
+                ReorderThreshold = request.ReorderThreshold ?? 0,
                 CreatedAt = now,
                 UpdatedAt = now,
             };
@@ -66,12 +72,18 @@ public static class ProductEndpoints
 
         group.MapPut("/{id:int}", async (int id, UpdateProductRequest request, InventoryDbContext db, CancellationToken ct) =>
         {
+            if (ThresholdError(request.ReorderThreshold) is { } thresholdError)
+            {
+                return thresholdError;
+            }
+
             var product = await db.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
             if (product is null)
             {
                 return Results.NotFound();
             }
 
+            product.ReorderThreshold = request.ReorderThreshold ?? product.ReorderThreshold;
             product.Name = request.Name!.Trim();
             product.Description = Clean(request.Description);
             product.UnitOfMeasure = Clean(request.UnitOfMeasure) ?? "each";
@@ -100,6 +112,11 @@ public static class ProductEndpoints
             return Results.Ok(ProductResponse.From(product));
         }).WithName("DeactivateProduct");
     }
+
+    private static IResult? ThresholdError(decimal? threshold) =>
+        threshold is { } value && decimal.Round(value, 3) != value
+            ? Results.BadRequest(new { error = "Reorder threshold can have at most 3 decimal places." })
+            : null;
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

@@ -14,6 +14,9 @@ public class Product
 
     public string UnitOfMeasure { get; set; } = "each";
 
+    // The low-stock alert fires when total on hand is at or below this. Never negative. 0 (the default) alerts only when the product is out of stock.
+    public decimal ReorderThreshold { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public DateTimeOffset CreatedAt { get; set; }

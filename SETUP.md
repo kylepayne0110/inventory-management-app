@@ -1,6 +1,6 @@
 # Setup
 
-> **PARTIALLY AVAILABLE.** The API and the local database connection are available: you can start SQL Server, run the API, and test it as described below. The product and warehouse tables, their API endpoints, and the first migration (Section 3) are available, as are receiving stock (Section 4) and issuing and adjusting stock (Section 5), which add two more migrations. Transfers (Section 6) add a fourth migration. Frontend setup is not available yet.
+> **PARTIALLY AVAILABLE.** The API and the local database connection are available: you can start SQL Server, run the API, and test it as described below. The product and warehouse tables, their API endpoints, and the first migration (Section 3) are available, as are receiving stock (Section 4) and issuing and adjusting stock (Section 5), which add two more migrations. Transfers (Section 6) add a fourth migration. The inventory views and alerts (Section 7) are read-only; they add a fifth migration, `AddProductReorderThreshold`, which adds each product's reorder threshold. Frontend setup is not available yet.
 
 ## Prerequisites (planned)
 
@@ -188,6 +188,20 @@ curl -i -X POST http://localhost:5127/api/products/1/deactivate
 
 Swagger UI at `/swagger` lists all of them and lets you try them in the browser. Expected errors: 400 for invalid input, 404 for an unknown id, 409 for a duplicate SKU or code, and 405 if you try `DELETE`.
 
+### Try the inventory views and alerts
+
+With some stock received:
+
+```bash
+curl -i 'http://localhost:5127/api/stock-movements?take=20'
+curl -i 'http://localhost:5127/api/stock-movements?productId=1&type=Issue'
+curl -i http://localhost:5127/api/inventory/stock-levels
+curl -i 'http://localhost:5127/api/inventory/alerts/low-stock'
+curl -i 'http://localhost:5127/api/inventory/alerts/aging-stock?days=60'
+```
+
+Set a product's low-stock level with `curl -X PUT http://localhost:5127/api/products/1 -H 'content-type: application/json' -d '{"name":"M10 bolt","reorderThreshold":25}'`; the low-stock alert compares each product against its own `reorderThreshold` (default 0). These views only read data. Invalid parameters (for example a negative `days`) return 400.
+
 ## Run the frontend (not yet available)
 
 Commands for installing dependencies and starting the React development server.
@@ -198,7 +212,7 @@ Commands for installing dependencies and starting the React development server.
 dotnet test InventoryManagement.slnx
 ```
 
-This builds the solution and runs the xUnit tests in `tests/Inventory.Api.Tests`. There are 32 tests. Two cover the health endpoints (`/health` returns 200 `Healthy`; `/health/db` returns 503 `Unhealthy` with no password or host when SQL Server is unreachable). The rest cover the product and warehouse endpoints: creating, validation errors, duplicate SKU/code, get, update, deactivate, and the absence of delete. The endpoint tests use an in-memory stand-in for the database, so none of the tests need SQL Server or a running API. The database-level unique indexes come from the migration and are not exercised by these tests.
+This builds the solution and runs the xUnit tests in `tests/Inventory.Api.Tests`. There are 111 tests. Two cover the health endpoints (`/health` returns 200 `Healthy`; `/health/db` returns 503 `Unhealthy` with no password or host when SQL Server is unreachable). The rest cover the product and warehouse endpoints: creating, validation errors, duplicate SKU/code, get, update, deactivate, and the absence of delete. Others cover receiving, issuing, adjusting, transferring, and the read-only inventory views and alerts. The endpoint tests use an in-memory stand-in for the database, so none of the tests need SQL Server or a running API. The database-level unique indexes come from the migration and are not exercised by these tests.
 
 ## Troubleshooting (to be written)
 

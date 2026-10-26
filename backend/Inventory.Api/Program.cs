@@ -61,6 +61,7 @@ app.MapWarehouseEndpoints();
 app.MapReceiptEndpoints();
 app.MapStockOperationEndpoints();
 app.MapTransferEndpoints();
+app.MapInventoryViewEndpoints();
 
 app.Run();
 

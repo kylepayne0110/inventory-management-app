@@ -30,8 +30,51 @@ public class ProductEndpointTests : IClassFixture<InventoryApiFactory>
         Assert.Equal("ABC-1", product!.Sku);
         Assert.Equal("Bolt", product.Name);
         Assert.Equal("each", product.UnitOfMeasure);
+        Assert.Equal(0m, product.ReorderThreshold);
         Assert.True(product.IsActive);
         Assert.Equal($"/api/products/{product.Id}", response.Headers.Location!.OriginalString);
+    }
+
+    [Fact]
+    public async Task Create_WithReorderThreshold_StoresIt()
+    {
+        var response = await _client.PostAsJsonAsync("/api/products", new { sku = "RO-1", name = "Bolt", reorderThreshold = 12.5 });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var product = (await response.Content.ReadFromJsonAsync<ProductResponse>())!;
+        Assert.Equal(12.5m, product.ReorderThreshold);
+        Assert.Equal(12.5m, (await _client.GetFromJsonAsync<ProductResponse>($"/api/products/{product.Id}"))!.ReorderThreshold);
+    }
+
+    [Fact]
+    public async Task Update_ChangesReorderThreshold_AndKeepsItWhenOmitted()
+    {
+        var product = await CreateAsync("RO-2");
+
+        var set = await _client.PutAsJsonAsync($"/api/products/{product.Id}", new { name = "Widget", reorderThreshold = 30 });
+        Assert.Equal(30m, (await set.Content.ReadFromJsonAsync<ProductResponse>())!.ReorderThreshold);
+
+        var omitted = await _client.PutAsJsonAsync($"/api/products/{product.Id}", new { name = "Renamed" });
+        Assert.Equal(30m, (await omitted.Content.ReadFromJsonAsync<ProductResponse>())!.ReorderThreshold);
+
+        var zero = await _client.PutAsJsonAsync($"/api/products/{product.Id}", new { name = "Renamed", reorderThreshold = 0 });
+        Assert.Equal(0m, (await zero.Content.ReadFromJsonAsync<ProductResponse>())!.ReorderThreshold);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(-0.001)]
+    [InlineData(1.2345)]
+    [InlineData(2000000000)]
+    public async Task ReorderThreshold_Invalid_Returns400OnCreateAndUpdate(double threshold)
+    {
+        var create = await _client.PostAsJsonAsync("/api/products", new { sku = "BAD-" + Guid.NewGuid().ToString("N")[..8], name = "Bolt", reorderThreshold = threshold });
+        Assert.Equal(HttpStatusCode.BadRequest, create.StatusCode);
+
+        var product = await CreateAsync("RO-" + Guid.NewGuid().ToString("N")[..8]);
+        var update = await _client.PutAsJsonAsync($"/api/products/{product.Id}", new { name = "Widget", reorderThreshold = threshold });
+        Assert.Equal(HttpStatusCode.BadRequest, update.StatusCode);
+        Assert.Equal(0m, (await _client.GetFromJsonAsync<ProductResponse>($"/api/products/{product.Id}"))!.ReorderThreshold);
     }
 
     [Fact]

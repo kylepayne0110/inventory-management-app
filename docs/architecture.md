@@ -1,6 +1,6 @@
 # Architecture
 
-> **Planned design, partly built.** Products, warehouses, receipt batches, receiving, issuing, adjusting, and transferring stock (each with its movement records) are implemented. The rest is still planned and will be updated as it is built.
+> **Planned design, partly built.** Products, warehouses, receipt batches, receiving, issuing, adjusting, and transferring stock (each with its movement records), plus read-only movement history, stock levels, and low-stock and aging alerts, are implemented. The frontend is still planned and will be updated as it is built.
 
 ## Overview
 
@@ -35,7 +35,7 @@ flowchart LR
 
 ## Core domain concepts (planned)
 
-- **Product**: something that is stocked.
+- **Product**: something that is stocked. It has a reorder threshold (default 0), the quantity at or below which it counts as low on stock.
 - **Warehouse**: a location where stock is held.
 - **Receipt batch** (built): a quantity of a product received into a warehouse on a specific date. Stock is tracked per batch so its age is known. It stores the quantity received (never changes) and the quantity on hand (changed by issue and adjust operations, and later by transfers).
 - **Stock movement** (built for receive, issue, and adjust): an append-only record of a change to stock, with a signed quantity change and, for adjustments, a reason. Transfers record two movements, `TransferOut` and `TransferIn`, which share a `TransferId`.
@@ -47,7 +47,7 @@ flowchart LR
 
 ## Movement recording and history
 
-Each inventory operation (receive, issue, transfer, adjust) will record its stock movement as that operation is implemented. The feature for viewing movement history comes later, with the inventory views and alerts.
+Each inventory operation (receive, issue, transfer, adjust) will record its stock movement as that operation is implemented. Movement history is viewable through `GET /api/stock-movements`, with filters and paging. Stock levels and the low-stock and aging-stock alerts are computed from batches when requested. The only stored input is each product's `ReorderThreshold`, which the low-stock alert compares against.
 
 ## Out of scope
 

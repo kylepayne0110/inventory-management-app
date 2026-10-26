@@ -22,7 +22,9 @@ public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : 
             e.Property(p => p.Name).HasMaxLength(200).IsRequired();
             e.Property(p => p.Description).HasMaxLength(1000);
             e.Property(p => p.UnitOfMeasure).HasMaxLength(20).IsRequired();
+            e.Property(p => p.ReorderThreshold).HasPrecision(18, 3).HasDefaultValue(0m);
             e.HasIndex(p => p.Sku).IsUnique();
+            e.ToTable(t => t.HasCheckConstraint("CK_Products_ReorderThreshold", "[ReorderThreshold] >= 0"));
         });
 
         modelBuilder.Entity<Warehouse>(e =>

@@ -45,6 +45,12 @@ namespace Inventory.Api.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<decimal>("ReorderThreshold")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)")
+                        .HasDefaultValue(0m);
+
                     b.Property<string>("Sku")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -63,7 +69,10 @@ namespace Inventory.Api.Data.Migrations
                     b.HasIndex("Sku")
                         .IsUnique();
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", t =>
+                        {
+                            t.HasCheckConstraint("CK_Products_ReorderThreshold", "[ReorderThreshold] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Inventory.Api.Models.ReceiptBatch", b =>

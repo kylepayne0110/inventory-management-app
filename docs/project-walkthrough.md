@@ -13,6 +13,64 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
+## Section 7: Inventory views and alerts (complete)
+
+**Status:** Section 7 is complete. Movement history can be read, stock on hand can be summed per product and warehouse, and low-stock and aging-stock alerts can be requested. Each product has its own reorder threshold. The React frontend and broader testing are not started.
+
+**What we built.**
+
+- `Contracts/InventoryViewContracts.cs` and `Endpoints/InventoryViewEndpoints.cs`: four read-only routes.
+- `Models/Product.cs`, `Contracts/ProductContracts.cs`, `Endpoints/ProductEndpoints.cs`: each product now has a `ReorderThreshold`, accepted on create and update and returned in responses.
+- `Data/Migrations/..._AddProductReorderThreshold`: the fifth migration. It adds one non-null `decimal(18,3)` column to `Products` with default 0 and a check that it is never negative. Existing products get 0 and no rows change otherwise.
+- `InventoryViewEndpointTests.cs` and `ProductEndpointTests.cs`: 25 new tests in total.
+
+**Endpoints.**
+
+- `GET /api/stock-movements`: history, newest first (by `occurredAt`, then id). Filters: `productId`, `warehouseId`, `receiptBatchId`, `type` (exact name, such as `TransferOut`), `transferId`, `from`, `to` (inclusive). Paged with `skip` (default 0) and `take` (default 100, 1 to 500). The reply holds `total`, `skip`, `take`, and `items`, each with the product SKU, warehouse code, reason, and `transferId`.
+- `GET /api/inventory/stock-levels`: quantity on hand and batch count per product and warehouse. Combinations with nothing on hand are omitted.
+- `GET /api/inventory/alerts/low-stock`: active products whose total on hand is at or below their own saved `ReorderThreshold`. There is no global threshold or query parameter. Products with no stock at all are included, with 0. `warehouseId` counts only that warehouse against each product's threshold (400 if it does not exist). Each alert shows the threshold used. Lowest first.
+- `POST /api/products` and `PUT /api/products/{id}` accept `reorderThreshold`: 0 to 1000000000, at most 3 decimal places, otherwise 400. On create it defaults to 0. On update, leaving it out keeps the current value.
+- `GET /api/inventory/alerts/aging-stock`: batches with stock on hand received at least `days` ago (default 90, 0 to 36500). Filters: `productId`, `warehouseId`. Oldest first, with `ageDays`.
+
+**Decisions.**
+
+- The low-stock threshold is stored per product, because a sensible level differs between products. It is compared with `<=`, so the alert fires at the threshold, not only below it.
+- The default for existing and new products is 0, which alerts only when a product is completely out of stock. That is the quietest safe choice: nobody is flooded with alerts until thresholds are set deliberately.
+- A first version of this section used a global `?threshold=` query parameter with a default of 10. It was replaced by the stored per-product value.
+- The migration is additive only (a new column with a default plus a check constraint), so existing products, batches, and movements are kept.
+- Age is measured from `ReceivedAt`, which transfers preserve, so transferred stock keeps its true age. Emptied batches are not reported as aging.
+- Low stock is judged per product (summed over batches), not per batch. Inactive products are skipped because they are retired; inactive warehouses and products still show in stock levels, aging, and history because the stock or history is real.
+- Invalid filter values return 400 instead of being ignored.
+- Responses are read-only projections, so nothing can change data through these routes.
+
+**Plain-language explanations.**
+
+- *Movement history*: the ledger of every receive, issue, adjustment, and transfer, which you can now read and filter.
+- *Stock level*: how much of a product is in a warehouse right now.
+- *Reorder threshold*: the quantity at or below which a product counts as running short. Each product has its own.
+- *Low-stock alert*: a list of products running short, judged against each product's reorder threshold.
+- *Aging stock*: stock that has sat for a long time and may need attention.
+- *Paging*: returning a long list a page at a time.
+
+**Key commands.**
+
+```bash
+dotnet dotnet-ef migrations add AddProductReorderThreshold --project backend/Inventory.Api --output-dir Data/Migrations
+dotnet dotnet-ef database update --project backend/Inventory.Api
+dotnet build InventoryManagement.slnx
+dotnet test InventoryManagement.slnx
+```
+
+**Verification.**
+
+- `dotnet build` succeeded with 0 warnings and 0 errors.
+- `dotnet test` passed: 111 tests. The tests cover thresholds on create and update (including negative, more than 3 decimals, and omitted-on-update), alerts using each product's own threshold, the at-the-threshold case, the default of 0, and a threshold change taking effect.
+- The endpoints were tested with the in-memory database only, not against the live API. The migration was applied to the local SQL Server with no drop or reset: the 2 products, 1 batch, and 7 movements were kept, both products got `ReorderThreshold` 0, and `__EFMigrationsHistory` lists five migrations.
+
+**What is not done.** The React frontend and broader testing and polish. Sections 8 onward are not started.
+
+---
+
 ## Section 6: Transfers (complete)
 
 **Status:** Section 6 is complete. Stock can be moved from a chosen batch to another warehouse. The original receipt date is kept, and two movements are recorded. Movement-history viewing, alerts, and the frontend are not started.
