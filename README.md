@@ -2,7 +2,7 @@
 
 A local portfolio project: an inventory management application for a fictional manufacturing or distribution business.
 
-> **Status:** Section 0, Foundation, is complete. The documentation and repository foundation are in place, but no application features are implemented. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
+> **Status:** Section 0, Foundation, is complete, and Section 1, API foundation, is in progress. Only the API foundation is implemented so far: a runnable .NET 10 Web API with a health endpoint, OpenAPI/Swagger documentation, and one xUnit test. No inventory features exist yet. See [Project status](#project-status) and [docs/milestones.md](docs/milestones.md).
 
 ## Purpose
 
@@ -60,7 +60,7 @@ inventory-management-app/
 └── .gitignore
 ```
 
-Only the documentation and configuration files exist so far (the Section 0 foundation). The backend, frontend, test project, solution, and Docker configuration are planned for later sections.
+So far, the documentation and configuration files (Section 0) and the solution, API project, and test project (Section 1) exist. The frontend and Docker configuration (`compose.yaml`) are planned for later sections. See [SETUP.md](SETUP.md) to run the API.
 
 ## Project status
 
@@ -68,7 +68,7 @@ See the status banner at the top of this file, and [docs/milestones.md](docs/mil
 
 ## Documentation
 
-- [SETUP.md](SETUP.md): setup and run instructions (initial outline, to be completed as the project is built)
+- [SETUP.md](SETUP.md): setup and run instructions (the API and tests are covered; database and frontend are not yet available)
 - [docs/architecture.md](docs/architecture.md): how the pieces fit together
 - [docs/milestones.md](docs/milestones.md): planned sections and progress
 - [docs/project-walkthrough.md](docs/project-walkthrough.md): build log and plain-language explanations

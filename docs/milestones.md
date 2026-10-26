@@ -2,7 +2,7 @@
 
 This file tracks the planned sections of the build and their progress.
 
-**Status:** Section 0, Foundation, is complete. The documentation and repository foundation are in place; no application features are implemented, and all later sections are not started.
+**Status:** Section 0, Foundation, is complete. Section 1, API foundation, is in progress. No inventory features are implemented, and all later sections are not started.
 
 Status key: ⏳ in progress · ⬜ not started · ✅ done
 
@@ -11,7 +11,7 @@ The list below is the current plan and may be refined as the project proceeds.
 | # | Section | Status |
 | --- | --- | --- |
 | 0 | **Foundation**: README, setup outline, architecture and walkthrough docs, `.gitignore`, `.editorconfig` | ✅ Done |
-| 1 | **Solution scaffolding**: .NET solution (`InventoryManagement.slnx`), empty API and test projects | ⬜ Not started |
+| 1 | **API foundation**: .NET solution (`InventoryManagement.slnx`), minimal API with a health endpoint and OpenAPI/Swagger docs, xUnit test project | ⏳ In progress |
 | 2 | **Database**: SQL Server in Docker via `compose.yaml` with a named data volume, EF Core setup, first migration | ⬜ Not started |
 | 3 | **Products and warehouses**: data model and API endpoints | ⬜ Not started |
 | 4 | **Receipt batches and receiving stock**, recording a movement for each receipt | ⬜ Not started |

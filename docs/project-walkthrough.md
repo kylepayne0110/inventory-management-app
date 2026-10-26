@@ -13,6 +13,46 @@ See [milestones.md](milestones.md) for the list of sections and their progress a
 
 ---
 
+## Section 1: API foundation (in progress)
+
+**Status:** In progress, awaiting review. Only the API foundation is built; there are no inventory features, database, frontend, or Docker setup yet.
+
+**What we built.**
+
+- `InventoryManagement.slnx`: the solution file at the repository root. It groups the projects so one command can build or test everything.
+- `backend/Inventory.Api/`: the ASP.NET Core Web API project (.NET 10).
+- `tests/Inventory.Api.Tests/`: the xUnit test project, which references the API project.
+
+**What the API and endpoint do.** An API is a program that waits for requests over HTTP and sends back answers. This one has a single endpoint, `GET /health`. When you visit it, the API answers `200 OK` with `{"status":"Healthy"}`. That is a quick way to confirm the API started and is responding. Two documentation pages are also available while running in Development: the OpenAPI document at `/openapi/v1.json` (a machine-readable description of every endpoint) and Swagger UI at `/swagger` (a web page that shows that description and lets you try endpoints).
+
+**How the files connect.**
+
+- `Program.cs` in the API project starts the app, registers OpenAPI, turns on Swagger UI in Development, and defines `/health`.
+- `Inventory.Api.csproj` lists the API's packages: `Microsoft.AspNetCore.OpenApi` (generates the OpenAPI document) and `Swashbuckle.AspNetCore.SwaggerUI` (the Swagger page, pointed at the generated document).
+- `Inventory.Api.Tests.csproj` has a project reference to the API, plus `Microsoft.AspNetCore.Mvc.Testing`, which starts the API inside the test process without opening a real network port.
+- `HealthEndpointTests.cs` uses that to call `/health` and check the status code and body. The last line of `Program.cs` (`public partial class Program;`) makes the API's entry point visible to the tests.
+
+**Key commands.**
+
+```bash
+dotnet new sln -n InventoryManagement --format slnx
+dotnet new webapi -n Inventory.Api -o backend/Inventory.Api --no-https
+dotnet new xunit -n Inventory.Api.Tests -o tests/Inventory.Api.Tests
+dotnet sln InventoryManagement.slnx add backend/Inventory.Api tests/Inventory.Api.Tests
+dotnet add tests/Inventory.Api.Tests reference backend/Inventory.Api
+dotnet add tests/Inventory.Api.Tests package Microsoft.AspNetCore.Mvc.Testing
+dotnet add backend/Inventory.Api package Swashbuckle.AspNetCore.SwaggerUI
+dotnet build InventoryManagement.slnx
+dotnet test InventoryManagement.slnx
+dotnet run --project backend/Inventory.Api
+```
+
+**Decisions.** .NET 10 ships its own OpenAPI generator but no Swagger UI, so a small Swashbuckle package supplies the UI page only. The template's sample weather endpoint was removed. HTTPS was left off because the app runs locally only.
+
+**What is not done.** Inventory entities, products, warehouses, EF Core, SQL Server, Docker, React, authentication, and integrations belong to later sections.
+
+---
+
 ## Section 0: Foundation (complete)
 
 **Status:** Section 0, Foundation, is complete. The documentation and repository foundation are in place; no application features are implemented.

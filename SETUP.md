@@ -1,6 +1,6 @@
 # Setup
 
-> **INITIAL OUTLINE: NOT YET USABLE.** There is no application code yet, so there is nothing to install or run. Each section below is a placeholder that will be replaced with accurate, tested instructions as the project is built.
+> **PARTIALLY AVAILABLE.** Only the API foundation (Section 1) exists. You can restore, build, run, and test the API as described below. The database and frontend steps are not yet available and remain placeholders.
 
 ## Prerequisites (planned)
 
@@ -93,21 +93,43 @@ Authentication is handled by GitHub's normal sign-in prompts or your configured 
 
 Cloning instructions (`git clone https://github.com/kylepayne0110/inventory-management-app`) will be finalized here once the app setup steps below are written.
 
-## Start the database (to be written)
+## Start the database (not yet available)
 
 SQL Server will run in a local Docker container defined in `compose.yaml`. Instructions, including how to supply the database password through a local environment file that is not committed, will be added when the file exists.
 
-## Run the API (to be written)
+## Run the API
 
-Commands for restoring, building, applying database migrations, and starting the .NET API.
+Run these from the repository root. The .NET 10 SDK is required.
 
-## Run the frontend (to be written)
+```bash
+dotnet restore InventoryManagement.slnx
+dotnet build InventoryManagement.slnx
+dotnet run --project backend/Inventory.Api
+```
+
+- `dotnet restore` downloads the libraries the projects need.
+- `dotnet build` compiles the API and the test project.
+- `dotnet run` starts the API. It listens on <http://localhost:5127> (set in `backend/Inventory.Api/Properties/launchSettings.json`). Stop it with Ctrl+C.
+
+With the API running (in the Development environment, which `dotnet run` uses by default):
+
+- Health check: <http://localhost:5127/health> returns `{"status":"Healthy"}`.
+- Swagger UI (interactive API documentation): <http://localhost:5127/swagger>
+- OpenAPI document (raw JSON): <http://localhost:5127/openapi/v1.json>
+
+Database migrations are not part of this step yet; there is no database.
+
+## Run the frontend (not yet available)
 
 Commands for installing dependencies and starting the React development server.
 
-## Run the tests (to be written)
+## Run the tests
 
-Commands for running the xUnit test suite.
+```bash
+dotnet test InventoryManagement.slnx
+```
+
+This builds the solution and runs the xUnit tests in `tests/Inventory.Api.Tests`. Currently there is one integration test, which starts the API in memory and checks that `/health` returns 200 OK with a `Healthy` status. The API does not need to be running separately.
 
 ## Troubleshooting (to be written)
 
